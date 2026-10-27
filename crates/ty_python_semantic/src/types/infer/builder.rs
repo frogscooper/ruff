@@ -2284,7 +2284,7 @@ impl<'db, 'ast> TypeInferenceBuilder<'db, 'ast> {
     ) {
         let alias_name = &type_alias.name.as_name_expr().unwrap().id;
 
-        // Check that no type parameter with a default follows a TypeVarTuple
+        // Check for ambiguous type parameter defaults after a TypeVarTuple
         // in the type alias's PEP 695 type parameter list.
         if let Some(type_params) = type_alias.type_params.as_deref() {
             post_inference::type_param_validation::check_single_typevar_tuple_pep695(
@@ -2292,7 +2292,7 @@ impl<'db, 'ast> TypeInferenceBuilder<'db, 'ast> {
                 type_params,
                 post_inference::type_param_validation::TypeParameterOwner::TypeAlias(alias_name),
             );
-            post_inference::type_param_validation::check_no_default_after_typevar_tuple_pep695(
+            post_inference::type_param_validation::check_defaults_after_typevar_tuple_pep695(
                 &self.context,
                 type_params,
             );
@@ -4321,7 +4321,9 @@ impl<'db, 'ast> TypeInferenceBuilder<'db, 'ast> {
                     .default_type(db, self.program_environment())
                     .is_some()
                 {
-                    if let Some(typevar_tuple) = typevar_tuple {
+                    if let Some(typevar_tuple) = typevar_tuple
+                        && !typevar.is_paramspec(db)
+                    {
                         valid_type_params = false;
                         if let Some(builder) = self
                             .context

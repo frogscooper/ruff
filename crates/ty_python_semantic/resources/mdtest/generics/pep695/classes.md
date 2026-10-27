@@ -2698,9 +2698,8 @@ reveal_type((1, 2, 3))  # revealed: tuple[Literal[1], Literal[2], Literal[3]]
 
 <!-- snapshot-diagnostics -->
 
-A type parameter with a default cannot follow a `TypeVarTuple` in a type parameter list. This is
-prohibited by the typing spec because a `TypeVarTuple` consumes all remaining positional type
-arguments, making any subsequent defaults meaningless.
+A defaulted `TypeVar` after a `TypeVarTuple` would make positional type arguments ambiguous. A
+defaulted `ParamSpec` can follow the pack because its parameter list is distinguishable.
 
 ```py
 # error: [invalid-type-variable-default] "Type parameter `T` with a default follows TypeVarTuple `Ts`"
@@ -2716,7 +2715,7 @@ class Baz[*Ts, T1 = int, T2 = str]: ...
 # but it raises `TypeError` at runtime
 # (<https://github.com/python/typing/issues/2211>)
 #
-# error: [invalid-type-variable-default]
+# no diagnostic
 class Qux[*Ts, **P = [int, str]]: ...
 
 # error: [invalid-type-variable-default]

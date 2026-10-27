@@ -65,12 +65,9 @@ pub(crate) fn check_single_typevar_tuple_pep695(
     }
 }
 
-/// Check that no type parameter with a default follows a `TypeVarTuple` in a PEP 695
-/// type parameter list. This is prohibited by the typing spec because a `TypeVarTuple`
-/// consumes all remaining positional type arguments.
-///
-/// This check is used for both classes and type aliases with PEP 695 type parameters.
-pub(crate) fn check_no_default_after_typevar_tuple_pep695(
+/// Check for ambiguous defaults after a pack in a PEP 695 class or type alias.
+/// A parameter list for a `ParamSpec` is distinguishable from types supplied to the pack.
+pub(crate) fn check_defaults_after_typevar_tuple_pep695(
     context: &InferContext<'_, '_>,
     type_params: &ast::TypeParams,
 ) {
@@ -79,7 +76,7 @@ pub(crate) fn check_no_default_after_typevar_tuple_pep695(
 
     for type_param in type_params {
         if typevar_tuple.is_some() {
-            if type_param.default().is_some() {
+            if type_param.default().is_some() && !type_param.is_param_spec() {
                 params_with_defaults.push(type_param);
             }
         } else if let ast::TypeParam::TypeVarTuple(tvt) = type_param {
@@ -101,8 +98,8 @@ pub(crate) fn check_no_default_after_typevar_tuple_pep695(
         return;
     };
 
-    let mut diagnostic = builder
-        .into_diagnostic("Type parameters with defaults cannot follow a TypeVarTuple parameter");
+    let mut diagnostic =
+        builder.into_diagnostic("Only a ParamSpec can have a default after a TypeVarTuple");
 
     if let [single_param] = params_with_defaults.as_slice() {
         let single_name = single_param.name();

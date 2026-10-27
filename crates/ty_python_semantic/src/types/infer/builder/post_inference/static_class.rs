@@ -878,7 +878,7 @@ pub(crate) fn check_static_class_definitions<'db>(
         );
     }
 
-    // Check that no type parameter with a default follows a TypeVarTuple.
+    // Check for ambiguous type parameter defaults after a TypeVarTuple.
     // This is prohibited by the typing spec because a TypeVarTuple consumes
     // all remaining positional type arguments.
     if let Some(type_params) = class_node.type_params.as_deref() {
@@ -887,7 +887,7 @@ pub(crate) fn check_static_class_definitions<'db>(
             type_params,
             super::type_param_validation::TypeParameterOwner::GenericClass(&class_node.name.id),
         );
-        super::type_param_validation::check_no_default_after_typevar_tuple_pep695(
+        super::type_param_validation::check_defaults_after_typevar_tuple_pep695(
             context,
             type_params,
         );
